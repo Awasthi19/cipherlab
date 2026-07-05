@@ -1,0 +1,965 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cipher Lab</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#ffffff;
+    --tint:#f6f6f8;
+    --tint-2:#fbeae7;
+    --ink:#181a1f;
+    --muted:#767b88;
+    --line:#e9e9ee;
+    --seal:#a8332c;
+    --seal-dim:#c96a5f;
+    --ok:#1e9e64;
+    --bad:#d23c3c;
+    --display:'Space Grotesk', sans-serif;
+    --mono:'IBM Plex Mono', 'Courier New', monospace;
+    --sans:'IBM Plex Sans', system-ui, sans-serif;
+    --r-lg:26px;
+    --r-md:16px;
+    --r-sm:10px;
+  }
+
+  *{ box-sizing:border-box; }
+  html,body{ margin:0; padding:0; }
+  body{
+    background:var(--paper);
+    color:var(--ink);
+    font-family:var(--sans);
+    -webkit-font-smoothing:antialiased;
+  }
+
+  .page{ max-width:960px; margin:0 auto; padding:56px 24px 64px; position:relative; }
+
+  /* ---------------- Header ---------------- */
+  .masthead{
+    position:relative;
+    padding:8px 0 40px;
+    overflow:visible;
+  }
+  .disc-watermark{
+    position:absolute;
+    top:-70px;
+    right:-90px;
+    width:320px;
+    height:320px;
+    opacity:0.5;
+    z-index:0;
+    pointer-events:none;
+  }
+  @media (max-width:640px){ .disc-watermark{ display:none; } }
+
+  .masthead-inner{ position:relative; z-index:1; }
+
+  .kicker{
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    font-family:var(--mono);
+    font-size:12px;
+    letter-spacing:0.14em;
+    text-transform:uppercase;
+    color:var(--seal);
+    background:var(--tint-2);
+    border-radius:999px;
+    padding:6px 14px 6px 10px;
+    margin-bottom:20px;
+  }
+  .kicker .dot{ width:6px; height:6px; border-radius:50%; background:var(--seal); }
+
+  h1.title{
+    font-family:var(--display);
+    font-weight:700;
+    font-size:clamp(36px, 6vw, 58px);
+    letter-spacing:-0.02em;
+    line-height:1;
+    margin:0 0 14px;
+  }
+  h1.title .accent{ color:var(--seal); }
+
+  .tagline{
+    font-size:15.5px;
+    color:var(--muted);
+    margin:0;
+    max-width:46ch;
+  }
+
+  /* ---------------- Pill tab nav ---------------- */
+  .tabs{
+    position:relative;
+    display:flex;
+    gap:4px;
+    background:var(--tint);
+    border-radius:999px;
+    padding:6px;
+    margin:36px 0 30px;
+  }
+  .tab-indicator{
+    position:absolute;
+    top:6px; left:6px;
+    height:calc(100% - 12px);
+    background:var(--ink);
+    border-radius:999px;
+    transition:transform .32s cubic-bezier(.65,0,.35,1), width .32s cubic-bezier(.65,0,.35,1);
+    z-index:0;
+  }
+  .tab{
+    position:relative;
+    z-index:1;
+    flex:1;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:8px;
+    background:transparent;
+    border:none;
+    color:var(--muted);
+    font-family:var(--sans);
+    font-size:14px;
+    font-weight:600;
+    padding:12px 16px;
+    border-radius:999px;
+    cursor:pointer;
+    transition:color .25s ease;
+    white-space:nowrap;
+  }
+  .tab svg{ width:16px; height:16px; flex-shrink:0; }
+  .tab.active{ color:#fff; }
+  @media (max-width:640px){
+    .tabs{ flex-direction:column; border-radius:20px; }
+    .tab-indicator{ display:none; }
+    .tab{ border-radius:14px; justify-content:flex-start; }
+    .tab.active{ background:var(--ink); color:#fff; }
+  }
+
+  /* ---------------- Panels ---------------- */
+  .panel{ display:none; }
+  .panel.active{ display:block; animation:rise .28s ease; }
+  @keyframes rise{ from{ opacity:0; transform:translateY(6px); } to{ opacity:1; transform:translateY(0); } }
+
+  .panel-head{
+    display:flex;
+    align-items:center;
+    gap:14px;
+    margin-bottom:22px;
+  }
+  .panel-icon{
+    width:46px; height:46px;
+    border-radius:14px;
+    background:var(--tint-2);
+    display:flex; align-items:center; justify-content:center;
+    flex-shrink:0;
+  }
+  .panel-icon svg{ width:22px; height:22px; color:var(--seal); }
+  .panel-head h2{
+    font-family:var(--display);
+    font-weight:600;
+    font-size:22px;
+    margin:0;
+  }
+  .panel-head .caption{
+    font-size:13px;
+    color:var(--muted);
+    margin:2px 0 0;
+  }
+
+  .card{
+    background:var(--paper);
+    border:1px solid var(--line);
+    border-radius:var(--r-lg);
+    padding:26px;
+    margin-bottom:20px;
+  }
+
+  .field{ margin-bottom:16px; }
+  .field label{
+    display:block;
+    font-family:var(--mono);
+    font-size:11px;
+    letter-spacing:0.07em;
+    text-transform:uppercase;
+    color:var(--muted);
+    margin-bottom:7px;
+  }
+  .field input[type=text],
+  .field input[type=password],
+  .field input[type=number],
+  .field select{
+    width:100%;
+    background:var(--tint);
+    border:1px solid transparent;
+    color:var(--ink);
+    font-family:var(--mono);
+    font-size:14px;
+    padding:12px 14px;
+    border-radius:var(--r-sm);
+    transition:border-color .15s ease, background .15s ease;
+  }
+  .field input:focus, .field select:focus{
+    outline:none;
+    background:var(--paper);
+    border-color:var(--seal);
+  }
+
+  .row{ display:flex; gap:14px; flex-wrap:wrap; }
+  .row > .field{ flex:1; min-width:150px; }
+
+  .btn{
+    font-family:var(--sans);
+    font-size:14px;
+    font-weight:600;
+    background:var(--ink);
+    color:#fff;
+    border:none;
+    padding:12px 22px;
+    cursor:pointer;
+    border-radius:999px;
+    transition:transform .12s ease, background .15s ease;
+  }
+  .btn:hover{ background:var(--seal); }
+  .btn:active{ transform:scale(0.97); }
+  .btn.secondary{
+    background:var(--tint);
+    color:var(--ink);
+  }
+  .btn.secondary:hover{ background:#eceaea; color:var(--ink); }
+  .btn.danger{
+    background:transparent;
+    color:var(--bad);
+    border:1px solid #f2c9c9;
+  }
+  .btn.danger:hover{ background:#fdf1f1; }
+  .btn-row{ display:flex; gap:10px; flex-wrap:wrap; margin:18px 0 0; }
+
+  /* ---------------- Readout (signature element) ---------------- */
+  .readout{
+    position:relative;
+    background:var(--tint);
+    border-radius:var(--r-md);
+    padding:18px 20px;
+    font-family:var(--mono);
+    font-size:13px;
+    color:var(--ink);
+    line-height:1.7;
+    white-space:pre-wrap;
+    word-break:break-all;
+    border-left:3px solid var(--seal);
+  }
+  .readout .cursor{
+    display:inline-block;
+    width:7px; height:13px;
+    background:var(--seal);
+    vertical-align:-2px;
+    animation:blink 1s steps(1) infinite;
+    border-radius:1px;
+  }
+  @media (prefers-reduced-motion: reduce){
+    .readout .cursor{ animation:none; opacity:.6; }
+    .panel.active{ animation:none; }
+  }
+  @keyframes blink{ 50%{ opacity:0; } }
+  .readout .muted-line{ color:var(--muted); }
+  .readout .ok{ color:var(--ok); font-weight:600; }
+  .readout .bad{ color:var(--bad); font-weight:600; }
+  .readout .dim{ color:var(--seal-dim); }
+
+  /* Rail fence visual */
+  .fence-vis{
+    display:flex;
+    flex-direction:column;
+    gap:4px;
+    font-family:var(--mono);
+    font-size:13px;
+    margin-top:16px;
+    background:var(--tint);
+    border-radius:var(--r-md);
+    padding:14px;
+    overflow-x:auto;
+  }
+  .fence-row{ display:flex; gap:4px; }
+  .fence-cell{
+    width:24px; height:24px;
+    border-radius:7px;
+    display:flex; align-items:center; justify-content:center;
+    color:var(--muted);
+  }
+  .fence-cell.filled{
+    color:#fff;
+    background:var(--seal);
+    font-weight:600;
+  }
+
+  .divider{ margin:24px 0; border:none; }
+  .divider svg{ width:100%; height:16px; display:block; }
+
+  table.dbtable{
+    width:100%;
+    border-collapse:collapse;
+    font-family:var(--mono);
+    font-size:12.5px;
+  }
+  table.dbtable th{
+    text-align:left;
+    color:var(--muted);
+    font-weight:500;
+    text-transform:uppercase;
+    letter-spacing:0.05em;
+    font-size:10.5px;
+    padding:8px 10px;
+    border-bottom:1px solid var(--line);
+  }
+  table.dbtable td{
+    padding:10px;
+    border-bottom:1px solid var(--line);
+    word-break:break-all;
+  }
+  table.dbtable td.hash{ color:var(--seal-dim); }
+  table.dbtable tr:last-child td{ border-bottom:none; }
+
+  .two-col{ display:grid; grid-template-columns:1fr 1fr; gap:20px; }
+  @media (max-width:680px){ .two-col{ grid-template-columns:1fr; } }
+
+  .card-heading{
+    font-family:var(--display);
+    font-weight:600;
+    font-size:15px;
+    margin:0 0 16px;
+    display:flex;
+    align-items:center;
+    gap:8px;
+  }
+  .card-heading svg{ width:16px; height:16px; color:var(--seal); }
+
+  footer{
+    margin-top:52px;
+    padding-top:20px;
+    border-top:1px solid var(--line);
+    font-family:var(--mono);
+    font-size:11.5px;
+    color:var(--muted);
+    text-align:center;
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <header class="masthead">
+    <svg class="disc-watermark" viewBox="0 0 320 320" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="160" cy="160" r="150" stroke="var(--ink)" stroke-opacity="0.08" stroke-width="1.5"/>
+      <circle cx="160" cy="160" r="112" stroke="var(--ink)" stroke-opacity="0.10" stroke-width="1.5"/>
+      <circle cx="160" cy="160" r="76" stroke="var(--seal)" stroke-opacity="0.18" stroke-width="1.5"/>
+      <g stroke="var(--ink)" stroke-opacity="0.14" stroke-width="1.5">
+        <line x1="160" y1="10" x2="160" y2="34"/>
+        <line x1="160" y1="286" x2="160" y2="310"/>
+        <line x1="10" y1="160" x2="34" y2="160"/>
+        <line x1="286" y1="160" x2="310" y2="160"/>
+        <line x1="55" y1="55" x2="72" y2="72"/>
+        <line x1="248" y1="248" x2="265" y2="265"/>
+        <line x1="265" y1="55" x2="248" y2="72"/>
+        <line x1="72" y1="248" x2="55" y2="265"/>
+      </g>
+      <circle cx="160" cy="48" r="4" fill="var(--seal)" fill-opacity="0.35"/>
+      <circle cx="160" cy="160" r="3" fill="var(--ink)" fill-opacity="0.3"/>
+    </svg>
+    <div class="masthead-inner">
+      <h1 class="title">Cipher<span class="accent">.</span>Lab</h1>
+      <p class="tagline">Rail Fence, RSA, and password hashing Simulation</p>
+    </div>
+  </header>
+
+  <nav class="tabs" id="tabs">
+    <div class="tab-indicator" id="tab-indicator"></div>
+    <button class="tab active" data-target="module-1">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3,6 9,18 15,6 21,18"/></svg>
+      Rail Fence
+    </button>
+    <button class="tab" data-target="module-2">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="15" r="4"/><path d="M10.5 12.5 20 3l1.5 1.5L20 6l1.5 1.5L20 9"/></svg>
+      RSA
+    </button>
+    <button class="tab" data-target="module-3">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a5 5 0 0 0-5 5v3a5 5 0 0 0 10 0V7a5 5 0 0 0-5-5Z"/><path d="M8 14v1a4 4 0 0 0 8 0v-1"/><path d="M12 18v3"/><path d="M9 21h6"/></svg>
+      Hash &amp; Login
+    </button>
+  </nav>
+
+  <main>
+    <!-- ============ MODULE 1: RAIL FENCE ============ -->
+    <section class="panel active" id="module-1">
+      <div class="panel-head">
+        <div class="panel-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3,6 9,18 15,6 21,18"/></svg>
+        </div>
+        <div>
+          <h2>Rail Fence Cipher</h2>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="field">
+          <label for="rf-text">Message</label>
+          <input type="text" id="rf-text" value="WEAREDISCOVEREDFLEEATONCE">
+        </div>
+        <div class="row">
+          <div class="field">
+            <label for="rf-rails">Rails</label>
+            <input type="number" id="rf-rails" value="3" min="2" max="12">
+          </div>
+        </div>
+        <div class="btn-row">
+          <button class="btn" id="rf-encrypt">Encrypt</button>
+          <button class="btn secondary" id="rf-decrypt">Decrypt</button>
+        </div>
+      </div>
+
+      <div class="readout" id="rf-output">Result will appear here<span class="cursor"></span></div>
+      <div id="rf-vis-wrap"></div>
+    </section>
+
+    <!-- ============ MODULE 2: RSA ============ -->
+    <section class="panel" id="module-2">
+      <div class="panel-head">
+        <div class="panel-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="15" r="4"/><path d="M10.5 12.5 20 3l1.5 1.5L20 6l1.5 1.5L20 9"/></svg>
+        </div>
+        <div>
+          <h2>RSA Encryption</h2>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="row">
+          <div class="field">
+            <label for="rsa-bits">Key size (bits of n)</label>
+            <select id="rsa-bits">
+              <option value="32">32-bit</option>
+              <option value="64" selected>64-bit</option>
+              <option value="96">96-bit</option>
+              <option value="128">128-bit</option>
+            </select>
+          </div>
+        </div>
+        <div class="btn-row">
+          <button class="btn" id="rsa-genkeys">Generate key pair</button>
+        </div>
+      </div>
+
+      <div class="readout" id="rsa-keys">No keys generated yet<span class="cursor"></span></div>
+
+      <div class="card" style="margin-top:20px;">
+        <div class="field">
+          <label for="rsa-message">Message</label>
+          <input type="text" id="rsa-message" value="Hello RSA!">
+        </div>
+        <div class="btn-row">
+          <button class="btn" id="rsa-encrypt">Encrypt</button>
+          <button class="btn secondary" id="rsa-decrypt">Decrypt</button>
+        </div>
+      </div>
+
+      <div class="readout" id="rsa-output">Generate a key pair first<span class="cursor"></span></div>
+    </section>
+
+    <!-- ============ MODULE 3: HASH & LOGIN ============ -->
+    <section class="panel" id="module-3">
+      <div class="panel-head">
+        <div class="panel-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a5 5 0 0 0-5 5v3a5 5 0 0 0 10 0V7a5 5 0 0 0-5-5Z"/><path d="M8 14v1a4 4 0 0 0 8 0v-1"/><path d="M12 18v3"/><path d="M9 21h6"/></svg>
+        </div>
+        <div>
+          <h2>Hashing &amp; Login</h2>
+        </div>
+      </div>
+
+      <div class="two-col">
+        <div class="card">
+          <p class="card-heading">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+            Register
+          </p>
+          <div class="field">
+            <label for="reg-username">Username</label>
+            <input type="text" id="reg-username" placeholder="e.g. ada">
+          </div>
+          <div class="field">
+            <label for="reg-password">Password</label>
+            <input type="password" id="reg-password" placeholder="choose a password">
+          </div>
+          <div class="field">
+            <label for="reg-algo">Hash algorithm</label>
+            <select id="reg-algo">
+              <option value="sha256">SHA-256</option>
+              <option value="md5">MD5</option>
+            </select>
+          </div>
+          <div class="btn-row">
+            <button class="btn" id="reg-submit">Create account</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <p class="card-heading">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="10" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+            Login
+          </p>
+          <div class="field">
+            <label for="login-username">Username</label>
+            <input type="text" id="login-username" placeholder="e.g. ada">
+          </div>
+          <div class="field">
+            <label for="login-password">Password</label>
+            <input type="password" id="login-password" placeholder="enter password">
+          </div>
+          <div class="btn-row">
+            <button class="btn" id="login-submit">Verify login</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="row" style="margin-top:20px;">
+        <div class="readout" id="reg-output" style="flex:1;">Awaiting registration<span class="cursor"></span></div>
+        <div class="readout" id="login-output" style="flex:1;">Awaiting login attempt<span class="cursor"></span></div>
+      </div>
+
+      <div class="card" style="margin-top:20px;">
+        <p class="card-heading">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5v14a9 3 0 0 0 18 0V5"/><path d="M3 12a9 3 0 0 0 18 0"/></svg>
+          Stored accounts
+        </p>
+        <table class="dbtable" id="db-table">
+          <thead><tr><th>Username</th><th>Algorithm</th><th>Stored hash</th></tr></thead>
+          <tbody id="db-body"></tbody>
+        </table>
+        <div class="btn-row">
+          <button class="btn danger" id="db-clear">Clear all accounts</button>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>Project for Information Security Coursework</footer>
+</div>
+
+<script>
+/* ============================================================
+   RAIL FENCE CIPHER
+   ============================================================ */
+function railFenceEncrypt(text, rails) {
+  rails = Math.max(2, parseInt(rails) || 2);
+  const fence = Array.from({ length: rails }, () => []);
+  let rail = 0, dir = 1;
+  for (const ch of text) {
+    fence[rail].push(ch);
+    if (rail === 0) dir = 1;
+    else if (rail === rails - 1) dir = -1;
+    rail += dir;
+  }
+  return { cipher: fence.map(row => row.join('')).join(''), fence };
+}
+
+function railFencePattern(len, rails) {
+  const pattern = [];
+  let rail = 0, dir = 1;
+  for (let i = 0; i < len; i++) {
+    pattern.push(rail);
+    if (rail === 0) dir = 1;
+    else if (rail === rails - 1) dir = -1;
+    rail += dir;
+  }
+  return pattern;
+}
+
+function railFenceDecrypt(cipher, rails) {
+  rails = Math.max(2, parseInt(rails) || 2);
+  const len = cipher.length;
+  const pattern = railFencePattern(len, rails);
+  const counts = Array(rails).fill(0);
+  for (const r of pattern) counts[r]++;
+  const rows = [];
+  let idx = 0;
+  for (let r = 0; r < rails; r++) {
+    rows.push(cipher.slice(idx, idx + counts[r]).split(''));
+    idx += counts[r];
+  }
+  const pointers = Array(rails).fill(0);
+  let result = '';
+  for (const r of pattern) result += rows[r][pointers[r]++];
+  return result;
+}
+
+/* ============================================================
+   MD5 (pure JS implementation)
+   ============================================================ */
+function md5(str) {
+  function rotl(x, c) { return (x << c) | (x >>> (32 - c)); }
+  function toWords(str) {
+    const bytes = new TextEncoder().encode(str);
+    const bitLen = bytes.length * 8;
+    const padded = new Uint8Array((((bytes.length + 8) >> 6) + 1) << 6);
+    padded.set(bytes);
+    padded[bytes.length] = 0x80;
+    const dv = new DataView(padded.buffer);
+    dv.setUint32(padded.length - 8, bitLen >>> 0, true);
+    dv.setUint32(padded.length - 4, Math.floor(bitLen / 4294967296), true);
+    const words = [];
+    for (let i = 0; i < padded.length; i += 4) words.push(dv.getUint32(i, true));
+    return words;
+  }
+  const K = new Array(64);
+  for (let i = 0; i < 64; i++) K[i] = Math.floor(Math.abs(Math.sin(i + 1)) * 4294967296) >>> 0;
+  const S = [
+    7,12,17,22, 7,12,17,22, 7,12,17,22, 7,12,17,22,
+    5, 9,14,20, 5, 9,14,20, 5, 9,14,20, 5, 9,14,20,
+    4,11,16,23, 4,11,16,23, 4,11,16,23, 4,11,16,23,
+    6,10,15,21, 6,10,15,21, 6,10,15,21, 6,10,15,21
+  ];
+  let a0 = 0x67452301, b0 = 0xefcdab89, c0 = 0x98badcfe, d0 = 0x10325476;
+  const words = toWords(str);
+  for (let chunk = 0; chunk < words.length; chunk += 16) {
+    const M = words.slice(chunk, chunk + 16);
+    let A = a0, B = b0, C = c0, D = d0;
+    for (let i = 0; i < 64; i++) {
+      let F, g;
+      if (i < 16) { F = (B & C) | (~B & D); g = i; }
+      else if (i < 32) { F = (D & B) | (~D & C); g = (5 * i + 1) % 16; }
+      else if (i < 48) { F = B ^ C ^ D; g = (3 * i + 5) % 16; }
+      else { F = C ^ (B | ~D); g = (7 * i) % 16; }
+      F = (F + A + K[i] + M[g]) >>> 0;
+      A = D; D = C; C = B;
+      B = (B + rotl(F, S[i])) >>> 0;
+    }
+    a0 = (a0 + A) >>> 0; b0 = (b0 + B) >>> 0; c0 = (c0 + C) >>> 0; d0 = (d0 + D) >>> 0;
+  }
+  function toHexLE(n) {
+    let bytes = [];
+    for (let i = 0; i < 4; i++) { bytes.push((n & 0xff).toString(16).padStart(2, '0')); n >>>= 8; }
+    return bytes.join('');
+  }
+  return toHexLE(a0) + toHexLE(b0) + toHexLE(c0) + toHexLE(d0);
+}
+
+/* ============================================================
+   SHA-256 (pure JS implementation)
+   ============================================================ */
+function sha256(str) {
+  const K = [
+    0x428a2f98,0x71374491,0xb5c0fbcf,0xe9b5dba5,0x3956c25b,0x59f111f1,0x923f82a4,0xab1c5ed5,
+    0xd807aa98,0x12835b01,0x243185be,0x550c7dc3,0x72be5d74,0x80deb1fe,0x9bdc06a7,0xc19bf174,
+    0xe49b69c1,0xefbe4786,0x0fc19dc6,0x240ca1cc,0x2de92c6f,0x4a7484aa,0x5cb0a9dc,0x76f988da,
+    0x983e5152,0xa831c66d,0xb00327c8,0xbf597fc7,0xc6e00bf3,0xd5a79147,0x06ca6351,0x14292967,
+    0x27b70a85,0x2e1b2138,0x4d2c6dfc,0x53380d13,0x650a7354,0x766a0abb,0x81c2c92e,0x92722c85,
+    0xa2bfe8a1,0xa81a664b,0xc24b8b70,0xc76c51a3,0xd192e819,0xd6990624,0xf40e3585,0x106aa070,
+    0x19a4c116,0x1e376c08,0x2748774c,0x34b0bcb5,0x391c0cb3,0x4ed8aa4a,0x5b9cca4f,0x682e6ff3,
+    0x748f82ee,0x78a5636f,0x84c87814,0x8cc70208,0x90befffa,0xa4506ceb,0xbef9a3f7,0xc67178f2
+  ];
+  let H = [0x6a09e667,0xbb67ae85,0x3c6ef372,0xa54ff53a,0x510e527f,0x9b05688c,0x1f83d9ab,0x5be0cd19];
+  function rotr(x, n) { return (x >>> n) | (x << (32 - n)); }
+  const bytes = new TextEncoder().encode(str);
+  const bitLen = bytes.length * 8;
+  const padded = new Uint8Array((((bytes.length + 8) >> 6) + 1) << 6);
+  padded.set(bytes);
+  padded[bytes.length] = 0x80;
+  const dv = new DataView(padded.buffer);
+  dv.setUint32(padded.length - 8, Math.floor(bitLen / 4294967296), false);
+  dv.setUint32(padded.length - 4, bitLen >>> 0, false);
+  const W = new Array(64);
+  for (let chunk = 0; chunk < padded.length; chunk += 64) {
+    for (let i = 0; i < 16; i++) W[i] = dv.getUint32(chunk + i * 4, false);
+    for (let i = 16; i < 64; i++) {
+      const s0 = rotr(W[i-15],7) ^ rotr(W[i-15],18) ^ (W[i-15] >>> 3);
+      const s1 = rotr(W[i-2],17) ^ rotr(W[i-2],19) ^ (W[i-2] >>> 10);
+      W[i] = (W[i-16] + s0 + W[i-7] + s1) >>> 0;
+    }
+    let [a,b,c,d,e,f,g,h] = H;
+    for (let i = 0; i < 64; i++) {
+      const S1 = rotr(e,6) ^ rotr(e,11) ^ rotr(e,25);
+      const ch = (e & f) ^ (~e & g);
+      const temp1 = (h + S1 + ch + K[i] + W[i]) >>> 0;
+      const S0 = rotr(a,2) ^ rotr(a,13) ^ rotr(a,22);
+      const maj = (a & b) ^ (a & c) ^ (b & c);
+      const temp2 = (S0 + maj) >>> 0;
+      h=g; g=f; f=e; e=(d+temp1)>>>0; d=c; c=b; b=a; a=(temp1+temp2)>>>0;
+    }
+    H[0]=(H[0]+a)>>>0; H[1]=(H[1]+b)>>>0; H[2]=(H[2]+c)>>>0; H[3]=(H[3]+d)>>>0;
+    H[4]=(H[4]+e)>>>0; H[5]=(H[5]+f)>>>0; H[6]=(H[6]+g)>>>0; H[7]=(H[7]+h)>>>0;
+  }
+  return H.map(x => x.toString(16).padStart(8,'0')).join('');
+}
+
+/* ============================================================
+   RSA (educational, BigInt-based)
+   ============================================================ */
+function modpow(base, exp, mod) {
+  base = base % mod;
+  let result = 1n;
+  while (exp > 0n) {
+    if (exp & 1n) result = (result * base) % mod;
+    exp >>= 1n;
+    base = (base * base) % mod;
+  }
+  return result;
+}
+function egcd(a, b) {
+  if (b === 0n) return [a, 1n, 0n];
+  const [g, x1, y1] = egcd(b, a % b);
+  return [g, y1, x1 - (a / b) * y1];
+}
+function modInverse(a, m) {
+  const [g, x] = egcd(a, m);
+  if (g !== 1n) throw new Error('No modular inverse exists');
+  return ((x % m) + m) % m;
+}
+function randomBigInt(bits) {
+  const bytes = Math.ceil(bits / 8);
+  let n = 0n;
+  for (let i = 0; i < bytes; i++) n = (n << 8n) | BigInt(Math.floor(Math.random() * 256));
+  const mask = 1n << BigInt(bits - 1);
+  n = n | mask;
+  n = n | 1n;
+  return n;
+}
+function isProbablePrime(n, k = 12) {
+  if (n < 2n) return false;
+  for (const p of [2n,3n,5n,7n,11n,13n,17n,19n,23n,29n,31n]) {
+    if (n === p) return true;
+    if (n % p === 0n) return false;
+  }
+  let d = n - 1n, r = 0n;
+  while (d % 2n === 0n) { d /= 2n; r += 1n; }
+  witnessLoop:
+  for (let i = 0; i < k; i++) {
+    const a = 2n + BigInt(Math.floor(Math.random() * 1e9)) % (n - 3n);
+    let x = modpow(a, d, n);
+    if (x === 1n || x === n - 1n) continue;
+    for (let j = 0n; j < r - 1n; j++) {
+      x = (x * x) % n;
+      if (x === n - 1n) continue witnessLoop;
+    }
+    return false;
+  }
+  return true;
+}
+function generatePrime(bits) {
+  let candidate;
+  do { candidate = randomBigInt(bits); } while (!isProbablePrime(candidate));
+  return candidate;
+}
+function generateRSAKeys(bits) {
+  const half = Math.floor(bits / 2);
+  let p = generatePrime(half);
+  let q;
+  do { q = generatePrime(half); } while (q === p);
+  const n = p * q;
+  const phi = (p - 1n) * (q - 1n);
+  let e = 65537n;
+  if (egcd(e, phi)[0] !== 1n) {
+    e = 3n;
+    while (egcd(e, phi)[0] !== 1n) e += 2n;
+  }
+  const d = modInverse(e, phi);
+  return { p, q, n, phi, e, d };
+}
+function rsaEncryptText(text, e, n) {
+  const bytes = new TextEncoder().encode(text);
+  return Array.from(bytes).map(b => modpow(BigInt(b), e, n).toString());
+}
+function rsaDecryptText(blocks, d, n) {
+  const bytes = blocks.map(c => Number(modpow(BigInt(c), d, n)));
+  return new TextDecoder().decode(new Uint8Array(bytes));
+}
+
+/* ============================================================
+   UI WIRING
+   ============================================================ */
+// -- Tabs with sliding pill indicator --
+const tabsEl = document.getElementById('tabs');
+const indicatorEl = document.getElementById('tab-indicator');
+const allTabs = Array.from(document.querySelectorAll('.tab'));
+
+function moveIndicator(tab) {
+  if (window.innerWidth <= 640) return;
+  indicatorEl.style.width = tab.offsetWidth + 'px';
+  indicatorEl.style.transform = `translateX(${tab.offsetLeft - 6}px)`;
+}
+
+window.addEventListener('load', () => moveIndicator(document.querySelector('.tab.active')));
+window.addEventListener('resize', () => moveIndicator(document.querySelector('.tab.active')));
+
+allTabs.forEach(tab => {
+  tab.addEventListener('click', () => {
+    allTabs.forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+    tab.classList.add('active');
+    document.getElementById(tab.dataset.target).classList.add('active');
+    moveIndicator(tab);
+  });
+});
+
+function cursor(html) { return html + '<span class="cursor"></span>'; }
+
+// -- Module 1: Rail Fence --
+const rfTextEl = document.getElementById('rf-text');
+const rfRailsEl = document.getElementById('rf-rails');
+const rfOutputEl = document.getElementById('rf-output');
+const rfVisWrap = document.getElementById('rf-vis-wrap');
+
+function renderFenceVis(text, rails) {
+  const pattern = railFencePattern(text.length, rails);
+  let html = '<div class="fence-vis">';
+  for (let r = 0; r < rails; r++) {
+    html += '<div class="fence-row">';
+    for (let i = 0; i < text.length; i++) {
+      const filled = pattern[i] === r;
+      html += `<div class="fence-cell ${filled ? 'filled' : ''}">${filled ? text[i] : ''}</div>`;
+    }
+    html += '</div>';
+  }
+  html += '</div>';
+  rfVisWrap.innerHTML = html;
+}
+
+document.getElementById('rf-encrypt').addEventListener('click', () => {
+  const text = rfTextEl.value;
+  const rails = rfRailsEl.value;
+  if (!text) { rfOutputEl.innerHTML = cursor('<span class="bad">Enter a message first.</span>'); return; }
+  const { cipher } = railFenceEncrypt(text, rails);
+  rfOutputEl.innerHTML = cursor(`<span class="muted-line">encrypted →</span> ${cipher}`);
+  renderFenceVis(text, Math.max(2, parseInt(rails) || 2));
+});
+
+document.getElementById('rf-decrypt').addEventListener('click', () => {
+  const text = rfTextEl.value;
+  const rails = rfRailsEl.value;
+  if (!text) { rfOutputEl.innerHTML = cursor('<span class="bad">Enter ciphertext first.</span>'); return; }
+  const plain = railFenceDecrypt(text, rails);
+  rfOutputEl.innerHTML = cursor(`<span class="muted-line">decrypted →</span> ${plain}`);
+  renderFenceVis(plain, Math.max(2, parseInt(rails) || 2));
+});
+
+// -- Module 2: RSA --
+let rsaKeys = null;
+const rsaKeysEl = document.getElementById('rsa-keys');
+const rsaOutputEl = document.getElementById('rsa-output');
+let lastCipherBlocks = null;
+
+document.getElementById('rsa-genkeys').addEventListener('click', () => {
+  const bits = parseInt(document.getElementById('rsa-bits').value);
+  rsaKeysEl.innerHTML = cursor('<span class="muted-line">generating prime pair…</span>');
+  setTimeout(() => {
+    rsaKeys = generateRSAKeys(bits);
+    lastCipherBlocks = null;
+    rsaKeysEl.innerHTML = cursor(
+      `<span class="muted-line">p</span> = ${rsaKeys.p}\n` +
+      `<span class="muted-line">q</span> = ${rsaKeys.q}\n` +
+      `<span class="muted-line">n = p·q</span> = ${rsaKeys.n}\n` +
+      `<span class="muted-line">φ(n)</span> = ${rsaKeys.phi}\n` +
+      `<span class="dim">public key</span>  (e, n) = (${rsaKeys.e}, ${rsaKeys.n})\n` +
+      `<span class="dim">private key</span> (d, n) = (${rsaKeys.d}, ${rsaKeys.n})`
+    );
+    rsaOutputEl.innerHTML = cursor('Keys ready — enter a message and encrypt.');
+  }, 10);
+});
+
+document.getElementById('rsa-encrypt').addEventListener('click', () => {
+  if (!rsaKeys) { rsaOutputEl.innerHTML = cursor('<span class="bad">Generate a key pair first.</span>'); return; }
+  const msg = document.getElementById('rsa-message').value;
+  if (!msg) { rsaOutputEl.innerHTML = cursor('<span class="bad">Enter a message first.</span>'); return; }
+  lastCipherBlocks = rsaEncryptText(msg, rsaKeys.e, rsaKeys.n);
+  rsaOutputEl.innerHTML = cursor(`<span class="muted-line">ciphertext blocks →</span>\n[ ${lastCipherBlocks.join(', ')} ]`);
+});
+
+document.getElementById('rsa-decrypt').addEventListener('click', () => {
+  if (!rsaKeys) { rsaOutputEl.innerHTML = cursor('<span class="bad">Generate a key pair first.</span>'); return; }
+  if (!lastCipherBlocks) { rsaOutputEl.innerHTML = cursor('<span class="bad">Encrypt a message first.</span>'); return; }
+  const plain = rsaDecryptText(lastCipherBlocks, rsaKeys.d, rsaKeys.n);
+  rsaOutputEl.innerHTML = cursor(`<span class="muted-line">decrypted →</span> ${plain}`);
+});
+
+// -- Module 3: Hashing & Login (simulated DB via localStorage) --
+const DB_KEY = 'cipherlab_users_v1';
+
+function loadDB() {
+  try { return JSON.parse(localStorage.getItem(DB_KEY)) || []; }
+  catch { return []; }
+}
+function saveDB(db) { localStorage.setItem(DB_KEY, JSON.stringify(db)); }
+function hashWith(algo, text) { return algo === 'md5' ? md5(text) : sha256(text); }
+
+function renderDB() {
+  const db = loadDB();
+  const tbody = document.getElementById('db-body');
+  if (db.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="3" style="color:var(--muted)">No accounts yet.</td></tr>';
+    return;
+  }
+  tbody.innerHTML = db.map(u =>
+    `<tr><td>${escapeHtml(u.username)}</td><td>${u.algo.toUpperCase()}</td><td class="hash">${u.hash}</td></tr>`
+  ).join('');
+}
+
+function escapeHtml(s) {
+  return s.replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
+}
+
+document.getElementById('reg-submit').addEventListener('click', () => {
+  const username = document.getElementById('reg-username').value.trim();
+  const password = document.getElementById('reg-password').value;
+  const algo = document.getElementById('reg-algo').value;
+  const outputEl = document.getElementById('reg-output');
+  if (!username || !password) {
+    outputEl.innerHTML = cursor('<span class="bad">Username and password are both required.</span>');
+    return;
+  }
+  const db = loadDB();
+  if (db.some(u => u.username.toLowerCase() === username.toLowerCase())) {
+    outputEl.innerHTML = cursor(`<span class="bad">Username "${escapeHtml(username)}" already exists.</span>`);
+    return;
+  }
+  const hash = hashWith(algo, password);
+  db.push({ username, algo, hash });
+  saveDB(db);
+  outputEl.innerHTML = cursor(
+    `<span class="ok">Account created.</span>\n` +
+    `<span class="muted-line">stored (${algo.toUpperCase()}) hash →</span>\n${hash}`
+  );
+  document.getElementById('reg-password').value = '';
+  renderDB();
+});
+
+document.getElementById('login-submit').addEventListener('click', () => {
+  const username = document.getElementById('login-username').value.trim();
+  const password = document.getElementById('login-password').value;
+  const outputEl = document.getElementById('login-output');
+  const db = loadDB();
+  const user = db.find(u => u.username.toLowerCase() === username.toLowerCase());
+  if (!user) {
+    outputEl.innerHTML = cursor(`<span class="bad">No account found for "${escapeHtml(username)}".</span>`);
+    return;
+  }
+  const attemptHash = hashWith(user.algo, password);
+  const match = attemptHash === user.hash;
+  outputEl.innerHTML = cursor(
+    `<span class="muted-line">recomputed hash →</span>\n${attemptHash}\n` +
+    (match ? `<span class="ok">✓ match — login verified</span>` : `<span class="bad">✗ no match — incorrect password</span>`)
+  );
+});
+
+document.getElementById('db-clear').addEventListener('click', () => {
+  localStorage.removeItem(DB_KEY);
+  renderDB();
+  document.getElementById('reg-output').innerHTML = cursor('Database cleared.');
+  document.getElementById('login-output').innerHTML = cursor('Database cleared.');
+});
+
+renderDB();
+</script>
+</body>
+</html>
